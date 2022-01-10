@@ -6,11 +6,14 @@
 
 import numpy as np
 from iou_calculation import iou_result
+import pandas as pd
 
 
-def data_matching(df_true, df_pred, dimension=2):
+def data_matching(df_true: pd.core.frame.DataFrame, df_pred: pd.core.frame.DataFrame,
+                  dimension: int = 2, iou_threshold: float = 0.5) -> (list, list):
     """
     data matching function
+    :param iou_threshold: threshold of iou matching
     :param dimension: 1 or 2, (2D or 3D), default = 2
     :param df_true: dataframe of true data
     :param df_pred: dataframe of pred data
@@ -20,8 +23,8 @@ def data_matching(df_true, df_pred, dimension=2):
     true_list = []
 
     for num in set(df_pred['msg_number']):
-        pred_msg_frame = df_pred[(df_pred['msg_number']==num)]
-        true_msg_frame = df_true[(df_true['msg_number']==num)]
+        pred_msg_frame = df_pred[(df_pred['msg_number'] == num)]
+        true_msg_frame = df_true[(df_true['msg_number'] == num)]
         true_class = list(true_msg_frame['class_label_true'])
         true_class_set = set(true_class)
         dict_true = np.zeros(true_msg_frame.shape[0])
@@ -36,12 +39,12 @@ def data_matching(df_true, df_pred, dimension=2):
                 bbox_counter = -1
                 for index_true, msg_bbox_true in true_msg_frame.iterrows():
                     bbox_counter += 1
-                    if iou_result(msg_bbox_true, msg_bbox_pred, dimension):
+                    if iou_result(msg_bbox_true, msg_bbox_pred, dimension, iou_threshold):
                         pred_list.append(msg_bbox_pred['class_label_pred'])
                         true_list.append(msg_bbox_true['class_label_true'])
                         dict_true[bbox_counter] = 1
                         pred_matched_or_not = True
-                        # break
+                        break
             if not pred_matched_or_not:
                 pred_list.append(msg_bbox_pred['class_label_pred'])
                 true_list.append('UnKnown')
@@ -52,16 +55,11 @@ def data_matching(df_true, df_pred, dimension=2):
                 pred_list.append('UnKnown')
 
     for num in (set(df_true['msg_number']) - set(df_pred['msg_number'])):
-        for index, msg_bbox_true in true_msg_frame[(true_msg_frame['msg_number']==num)].iterrows():
+        for index, msg_bbox_true in df_true[(df_true['msg_number'] == num)].iterrows():
             true_list.append(msg_bbox_true['class_label_pred'])
             pred_list.append('UnKnown')
 
-
-
     return true_list, pred_list
-
-
-
 
 
 # def msg_object_matching(df_true, pred_object, dimension=2):

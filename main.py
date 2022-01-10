@@ -35,14 +35,14 @@ if __name__ == '__main__':
     pred_list_all = []
     true_list_all = []
     for i in list_args:
-        print('------------',i,'-----------------')
+        print('------------', i, '-----------------')
         true_path = i[0]
         pred_path = i[1]
 
         msg_df_pred, msg_df_pred_number = rosbag_ouput_to_dataframe(pred_path, topic=['/ld_object_lists'])
         msg_df_true, msg_df_true_number = rosbag_ouput_to_dataframe(true_path, topic=['/ld_object_lists'])
         # distance filter
-        distance_range = [[0, 30], [-10, 10], [-math.inf, math.inf]]
+        distance_range = [[0, 50], [-10, 10], [-math.inf, math.inf]]
         # msg_df_true_filtered = distance_filter(msg_df_true, distance_range)
         # msg_df_pred_filtered = distance_filter(msg_df_pred, distance_range)
 
@@ -53,29 +53,22 @@ if __name__ == '__main__':
 
         # matching
 
-        pred_list, true_list = data_matching(msg_df_true_filtered_removed, msg_df_pred_filtered_removed, dimension=2)
+        pred_list, true_list = data_matching(msg_df_true_filtered_removed,
+                                             msg_df_pred_filtered_removed, dimension=2, iou_threshold=0.5)
         pred_list_all.extend(pred_list)
         true_list_all.extend(true_list)
+    # Multi-Class Classification
     print(classification_report(pred_list_all, true_list_all))
     cm = confusion_matrix(pred_list_all, true_list_all)
     print(cm)
-    disp = ConfusionMatrixDisplay(cm, display_labels=['Car', 'Cyclist', 'Motorcycle', 'Pedestrian', 'Truck', 'UnKnown', 'Van'])
+    disp = ConfusionMatrixDisplay(cm, display_labels=['Car', 'Cyclist', 'Motorcycle', 'Pedestrian', 'Truck', 'UnKnown',
+                                                      'Van'])
     disp.plot()
     # plt.figure(dpi=100)
     plt.savefig('confusion.png')
 
-
-
-
-
-
-
-
-
     # for item in set(msg_df_pred_filtered_removed['msg_number']):
     #     print(item)
-
-
 
     end = time.clock()  # end time
     print('run time:', str(end - start))

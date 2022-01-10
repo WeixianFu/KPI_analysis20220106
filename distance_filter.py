@@ -6,9 +6,10 @@
 
 import math
 import time
+import pandas as pd
 
 
-def distance_filter_helpfunc(position, distance_range=None):
+def distance_filter_helpfunc(position: list, distance_range: list = None) -> bool:
     """
     help function for func distance_filter.
     This function can be used to judge a point in the range of (x_range, y_range,z_range) or not
@@ -27,7 +28,7 @@ def distance_filter_helpfunc(position, distance_range=None):
     return dis_filter
 
 
-def distance_filter(df, distance_range=None):
+def distance_filter(df: pd.core.frame.DataFrame, distance_range: list = None) -> pd.core.frame.DataFrame:
     """
     get df filtered with distance range
 
@@ -43,7 +44,7 @@ def distance_filter(df, distance_range=None):
     return df
 
 
-def distance_filter_remove(df, distance_range=None):
+def distance_filter_remove(df: pd.core.frame.DataFrame, distance_range: list = None) -> pd.core.frame.DataFrame:
     """
     get a new dataframe from df by remove all filtered('distance_filter' == False) data
 

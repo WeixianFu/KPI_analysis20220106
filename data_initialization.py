@@ -13,7 +13,7 @@ import time
 from distance_filter import distance_filter
 
 
-def rosbag_ouput_to_dataframe(path, mode='r', topic=None):
+def rosbag_ouput_to_dataframe(path: str, mode: str = 'r', topic: str = None) -> (pd.core.frame.DataFrame, int):
     """
     this function can be used to return a dataframe from rosbag document, this data frame contain 25 columns:
     ['timestamp_std', 'msg_number', 'msg_item_id', 'class_label_true', 'class_label_pred',
@@ -70,7 +70,7 @@ def rosbag_ouput_to_dataframe(path, mode='r', topic=None):
     return msg_df, msg_count
 
 
-def rosbag_save_to_csv(bag_path, bag_topic=None, csv_path='default', csv_name='default'):
+def rosbag_save_to_csv(bag_path: str, bag_topic: str = None, csv_path: str = 'default', csv_name: str = 'default') -> None:
     '''
     save bag data to csv, use rosbag_ouput_to_dataframe as help function
     @bag_path: rosbag document path, example: example: "/home/weixianf/liangdao/Data/40-merge.bag"
@@ -110,7 +110,7 @@ def rosbag_save_to_csv(bag_path, bag_topic=None, csv_path='default', csv_name='d
     temp_df.to_csv(results_dir)
 
 
-def unique_df_label_helpfunc(df, pred_or_true):
+def unique_df_label_helpfunc(df: pd.core.frame.DataFrame, pred_or_true: str) -> str:
     """
     help function for unique_df_for_msg_number(df, pred_or_true), return the most frequent class label
     :param df: dataframe from rosbag
@@ -127,7 +127,7 @@ def unique_df_label_helpfunc(df, pred_or_true):
     return vote_label
 
 
-def unique_df_for_msg_number(df, pred_or_true):
+def unique_df_for_msg_number(df: pd.core.frame.DataFrame, pred_or_true: str) -> pd.core.frame.DataFrame:
     """
     return the unique datdframe information for every msg
 
@@ -170,9 +170,6 @@ if __name__ == '__main__':
         ["/home/ubuntu18/liangdao/Data/48-merge.bag", "/home/ubuntu18/liangdao/Data/48_ALT_OD_CP2.bag"]
     ]
 
-
-
-
     # obtain data from rosbag document
     # msg_df_pred, msg_df_pred_number = rosbag_ouput_to_dataframe("/home/ubuntu18/liangdao/Data/21-merge.bag",
     #                                                             topic=['/ld_object_lists'])
@@ -182,28 +179,24 @@ if __name__ == '__main__':
     # msg_df_true_filtered = distance_filter(msg_df_true, distance_range=[[0, 30], [-10, 10], [-math.inf, math.inf]])
     # msg_df_pred_filtered = distance_filter(msg_df_pred, distance_range=[[0, 30], [-10, 10], [-math.inf, math.inf]])
 
-
-
-
-
     end = time.clock()  # end time
     print('run time:', str(end - start))
 
-
-
-    # predc = 0
-    # predmc = 0
-    # truemc = 0
-    # truec = 0
-    # for i in list_args:
-    #     msg_df_pred, msg_df_pred_number = rosbag_ouput_to_dataframe(i[0], topic=['/ld_object_lists'])
-    #     msg_df_true, msg_df_true_number = rosbag_ouput_to_dataframe(i[1], topic=['/ld_object_lists'])
-    #     predc += msg_df_pred[(msg_df_pred['msg_item_id'] == -1)].shape[0]
-    #     predmc += msg_df_pred_number
-    #     truec += msg_df_true[(msg_df_true['msg_item_id'] == -1)].shape[0]
-    #     # truec += msg_df_true['msg_number'].shape[0]
-    #     truemc += msg_df_true_number
-    # print(predc,predmc,truec,truemc)
+    predc = 0
+    predmc = 0
+    truemc = 0
+    truec = 0
+    for i in list_args:
+        msg_df_pred, msg_df_pred_number = rosbag_ouput_to_dataframe(i[0], topic=['/ld_object_lists'])
+        print(type(msg_df_pred))
+        break
+        msg_df_true, msg_df_true_number = rosbag_ouput_to_dataframe(i[1], topic=['/ld_object_lists'])
+        predc += msg_df_pred[(msg_df_pred['msg_item_id'] == -1)].shape[0]
+        predmc += msg_df_pred_number
+        truec += msg_df_true[(msg_df_true['msg_item_id'] == -1)].shape[0]
+        # truec += msg_df_true['msg_number'].shape[0]
+        truemc += msg_df_true_number
+    print(predc, predmc, truec, truemc)
 
     # msg_df_true_filtered = distance_filter(msg_df_true, range=[[0, 30], [-10, 10], [-math.inf, math.inf]])
     # msg_df_pred_filtered = distance_filter(msg_df_pred, range=[[0, 30], [-10, 10], [-math.inf, math.inf]])
