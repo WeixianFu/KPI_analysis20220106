@@ -6,7 +6,6 @@
 import time
 import math
 import matplotlib.pyplot as plt
-import pandas as pd
 from data_initialization import rosbag_ouput_to_dataframe
 from distance_filter import distance_filter_remove
 from data_matching import data_matching
@@ -31,6 +30,12 @@ if __name__ == '__main__':
         ["/home/ubuntu18/liangdao/Data/42-merge.bag", "/home/ubuntu18/liangdao/Data/42_ALT_OD_CP2.bag"],
         ["/home/ubuntu18/liangdao/Data/48-merge.bag", "/home/ubuntu18/liangdao/Data/48_ALT_OD_CP2.bag"]
     ]
+
+    # distance filter
+    distance_range = [[0, 30], [-10, 10], [-math.inf, math.inf]]
+    dimensions = 2
+    iou_threshold = 0.5
+
     # obtain data from rosbag document
     pred_list_all = []
     true_list_all = []
@@ -41,8 +46,7 @@ if __name__ == '__main__':
 
         msg_df_pred, msg_df_pred_number = rosbag_ouput_to_dataframe(pred_path, topic=['/ld_object_lists'])
         msg_df_true, msg_df_true_number = rosbag_ouput_to_dataframe(true_path, topic=['/ld_object_lists'])
-        # distance filter
-        distance_range = [[0, 50], [-10, 10], [-math.inf, math.inf]]
+
         # msg_df_true_filtered = distance_filter(msg_df_true, distance_range)
         # msg_df_pred_filtered = distance_filter(msg_df_pred, distance_range)
 
@@ -54,13 +58,17 @@ if __name__ == '__main__':
         # matching
 
         pred_list, true_list = data_matching(msg_df_true_filtered_removed,
-                                             msg_df_pred_filtered_removed, dimension=2, iou_threshold=0.5)
+                                             msg_df_pred_filtered_removed,
+                                             dimensions=dimensions, iou_threshold=iou_threshold)
         pred_list_all.extend(pred_list)
         true_list_all.extend(true_list)
     # Multi-Class Classification
+    print('----------'+'Classification Report'+'----------')
     print(classification_report(pred_list_all, true_list_all))
+    print('----------'+'Confusion matrix'+'----------')
     cm = confusion_matrix(pred_list_all, true_list_all)
     print(cm)
+    print('a image of confusion matrix have be save as confusion.png')
     disp = ConfusionMatrixDisplay(cm, display_labels=['Car', 'Cyclist', 'Motorcycle', 'Pedestrian', 'Truck', 'UnKnown',
                                                       'Van'])
     disp.plot()

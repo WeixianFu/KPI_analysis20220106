@@ -7,10 +7,7 @@
 import rosbag
 import pandas as pd
 import os
-import math
 import time
-# import .py document
-from distance_filter import distance_filter
 
 
 def rosbag_ouput_to_dataframe(path: str, mode: str = 'r', topic: str = None) -> (pd.core.frame.DataFrame, int):
@@ -187,16 +184,29 @@ if __name__ == '__main__':
     truemc = 0
     truec = 0
     for i in list_args:
-        msg_df_pred, msg_df_pred_number = rosbag_ouput_to_dataframe(i[0], topic=['/ld_object_lists'])
-        print(type(msg_df_pred))
+        msg_df_pred, msg_df_pred_number = rosbag_ouput_to_dataframe(i[1], topic=['/ld_object_lists'])
+        msg_df_true, msg_df_true_number = rosbag_ouput_to_dataframe(i[0], topic=['/ld_object_lists'])
         break
-        msg_df_true, msg_df_true_number = rosbag_ouput_to_dataframe(i[1], topic=['/ld_object_lists'])
         predc += msg_df_pred[(msg_df_pred['msg_item_id'] == -1)].shape[0]
         predmc += msg_df_pred_number
         truec += msg_df_true[(msg_df_true['msg_item_id'] == -1)].shape[0]
         # truec += msg_df_true['msg_number'].shape[0]
         truemc += msg_df_true_number
-    print(predc, predmc, truec, truemc)
+    a = 0
+    b = 0
+    c = 0
+    print(msg_df_true.shape[0])
+    aa = msg_df_pred[(msg_df_pred['msg_number'])==1]
+    print(aa.shape)
+    for index, msg in msg_df_true.iterrows():
+        if msg['class_label_pred']!=msg['class_label_true']:
+            a+=1
+            print(msg['class_label_pred'], msg['class_label_true'])
+        elif msg['class_label_pred'] == msg['class_label_true']:
+            b+=1
+        c+=1
+    print(a, b, c)
+
 
     # msg_df_true_filtered = distance_filter(msg_df_true, range=[[0, 30], [-10, 10], [-math.inf, math.inf]])
     # msg_df_pred_filtered = distance_filter(msg_df_pred, range=[[0, 30], [-10, 10], [-math.inf, math.inf]])

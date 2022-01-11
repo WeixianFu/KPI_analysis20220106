@@ -5,16 +5,70 @@
 """
 
 import numpy as np
-from iou_calculation import iou_result
+from iou_calculation import iou_cv
 import pandas as pd
+
+# old data matching function
+# def data_matching(df_true: pd.core.frame.DataFrame, df_pred: pd.core.frame.DataFrame,
+#                   dimensions: int = 2, iou_threshold: float = 0.5) -> (list, list):
+#     """
+#     old version data matching function, have be replaced by new data matching function
+#     data matching function
+#     :param iou_threshold: threshold of iou matching
+#     :param dimension: 1 or 2, (2D or 3D), default = 2
+#     :param df_true: dataframe of true data
+#     :param df_pred: dataframe of pred data
+#     :return: two list, pred_list = ['Car', 'Car', ..., ], pred_list = ['Car', 'Van', 'UnKonwn', ... ,]
+#     """
+#     pred_list = []
+#     true_list = []
+#
+#     for num in set(df_pred['msg_number']):
+#         pred_msg_frame = df_pred[(df_pred['msg_number'] == num)]
+#         true_msg_frame = df_true[(df_true['msg_number'] == num)]
+#         true_class = list(true_msg_frame['class_label_true'])
+#         true_class_set = set(true_class)
+#         dict_true = np.zeros(true_msg_frame.shape[0])
+#
+#         for index, msg_bbox_pred in pred_msg_frame.iterrows():
+#             pred_matched_or_not = False
+#             if msg_bbox_pred['class_label_pred'] not in true_class_set:
+#                 pred_list.append(msg_bbox_pred['class_label_pred'])
+#                 true_list.append('UnKnown')
+#                 pred_matched_or_not = True
+#             else:
+#                 bbox_counter = -1
+#                 for index_true, msg_bbox_true in true_msg_frame.iterrows():
+#                     bbox_counter += 1
+#                     if iou_result(msg_bbox_true, msg_bbox_pred, dimensions, iou_threshold):
+#                         pred_list.append(msg_bbox_pred['class_label_pred'])
+#                         true_list.append(msg_bbox_true['class_label_true'])
+#                         dict_true[bbox_counter] = 1
+#                         pred_matched_or_not = True
+#                         break
+#             if not pred_matched_or_not:
+#                 pred_list.append(msg_bbox_pred['class_label_pred'])
+#                 true_list.append('UnKnown')
+#
+#         for num1 in range(len(dict_true)):
+#             if dict_true[num1] == 0:
+#                 true_list.append(true_class[num1])
+#                 pred_list.append('UnKnown')
+#
+#     for num in (set(df_true['msg_number']) - set(df_pred['msg_number'])):
+#         for index, msg_bbox_true in df_true[(df_true['msg_number'] == num)].iterrows():
+#             true_list.append(msg_bbox_true['class_label_true'])
+#             pred_list.append('UnKnown')
+#
+#     return true_list, pred_list
 
 
 def data_matching(df_true: pd.core.frame.DataFrame, df_pred: pd.core.frame.DataFrame,
-                  dimension: int = 2, iou_threshold: float = 0.5) -> (list, list):
+                  dimensions: int = 2, iou_threshold: float = 0.5) -> (list, list):
     """
     data matching function
+    :param dimensions: 1 or 2, (2D or 3D), default = 2
     :param iou_threshold: threshold of iou matching
-    :param dimension: 1 or 2, (2D or 3D), default = 2
     :param df_true: dataframe of true data
     :param df_pred: dataframe of pred data
     :return: two list, pred_list = ['Car', 'Car', ..., ], pred_list = ['Car', 'Van', 'UnKonwn', ... ,]
@@ -22,75 +76,42 @@ def data_matching(df_true: pd.core.frame.DataFrame, df_pred: pd.core.frame.DataF
     pred_list = []
     true_list = []
 
-    for num in set(df_pred['msg_number']):
-        pred_msg_frame = df_pred[(df_pred['msg_number'] == num)]
-        true_msg_frame = df_true[(df_true['msg_number'] == num)]
-        true_class = list(true_msg_frame['class_label_true'])
-        true_class_set = set(true_class)
-        dict_true = np.zeros(true_msg_frame.shape[0])
-
-        for index, msg_bbox_pred in pred_msg_frame.iterrows():
-            pred_matched_or_not = False
-            if msg_bbox_pred['class_label_pred'] not in true_class_set:
-                pred_list.append(msg_bbox_pred['class_label_pred'])
-                true_list.append('UnKnown')
-                pred_matched_or_not = True
-            else:
-                bbox_counter = -1
-                for index_true, msg_bbox_true in true_msg_frame.iterrows():
-                    bbox_counter += 1
-                    if iou_result(msg_bbox_true, msg_bbox_pred, dimension, iou_threshold):
-                        pred_list.append(msg_bbox_pred['class_label_pred'])
-                        true_list.append(msg_bbox_true['class_label_true'])
-                        dict_true[bbox_counter] = 1
-                        pred_matched_or_not = True
-                        break
-            if not pred_matched_or_not:
-                pred_list.append(msg_bbox_pred['class_label_pred'])
-                true_list.append('UnKnown')
-
-        for num1 in range(len(dict_true)):
-            if dict_true[num1] == 0:
-                true_list.append(true_class[num1])
-                pred_list.append('UnKnown')
-
-    for num in (set(df_true['msg_number']) - set(df_pred['msg_number'])):
-        for index, msg_bbox_true in df_true[(df_true['msg_number'] == num)].iterrows():
-            true_list.append(msg_bbox_true['class_label_pred'])
+    for num in set(df_true['msg_number']) - set(df_pred['msg_number']):
+        for index, msg_object_true in df_true[(df_true['msg_number'] == num)].iterrows():
+            true_list.append(msg_object_true['class_label_true'])
             pred_list.append('UnKnown')
-
+    for num in set(df_pred['msg_number']) - set(df_true['msg_number']):
+        for index, msg_object_pred in df_pred[(df_pred['msg_number'] == num)].iterrows():
+            pred_list.append(msg_object_pred['class_label_pred'])
+            true_list.append('UnKnown')
+    for num in set(df_true['msg_number']) & set(df_pred['msg_number']):
+        pred_frame_df = df_pred[(df_pred['msg_number'] == num)]
+        true_frame_df = df_true[(df_true['msg_number'] == num)]
+        set_class_pred = set(pred_frame_df['class_label_pred'])
+        set_class_true = set(true_frame_df['class_label_true'])
+        for classes in set_class_true - set_class_pred:
+            for index, msg_object_true in true_frame_df[(true_frame_df['class_label_true'] == classes)].iterrows():
+                true_list.append(classes)
+                pred_list.append('UnKnown')
+        for classes in set_class_pred - set_class_true:
+            for index, msg_object_pred in pred_frame_df[(pred_frame_df['class_label_true'] == classes)].iterrows():
+                true_list.append('Unknown')
+                pred_list.append(classes)
+        for classes in set_class_true & set_class_pred:
+            pred_frame_class_df = pred_frame_df[(pred_frame_df['class_label_pred'] == classes)]
+            true_frame_class_df = true_frame_df[(true_frame_df['class_label_true'] == classes)]
+            matching_results = iou_cv(true_frame_class_df, pred_frame_class_df, dimensions, iou_threshold)
+            for i in range(matching_results[0]):
+                true_list.append(classes)
+                pred_list.append(classes)
+            for i in range(matching_results[1]):
+                true_list.append(classes)
+                pred_list.append('UnKnown')
+            for i in range(matching_results[2]):
+                true_list.append('UnKnown')
+                pred_list.append(classes)
     return true_list, pred_list
 
-
-# def msg_object_matching(df_true, pred_object, dimension=2):
-#     """
-#     help function for data_matching function, given a pred_object and a dataframe of all true object in the same frame
-#     :param df_true:
-#     :param pred_object:
-#     :return:
-#     """
-#     vehicle = pred_object["class_label_pred"] # a str, example: 'Car'
-#     temp_pred_list = []
-#     temp_true_list = []
-#     dict_list = np.zeros(df_true.shape[0])
-#     pred_object_position = [pred_object['position_x'], pred_object['position_y'], pred_object['position_z']]
-#     pred_object_orientation = [pred_object['orientation_x'], pred_object['orientation_y'],
-#                                pred_object['orientation_z'], pred_object['orientation_w']]
-#     true_object_counter = 0
-#     for index, msg_object_true in df_true.iterrows():
-#         if msg_object_true["class_label_pred"] != vehicle:
-#             temp_pred_list.append(msg_object_true["class_label_pred"])
-#             temp_true_list.append('UnKnown')
-#         else:
-#             object_position = [msg_object_true['position_x'], msg_object_true['position_y'],
-#                                msg_object_true['position_z']]
-#             object_orientation = [msg_object_true['orientation_x'], msg_object_true['orientation_y'],
-#                                   msg_object_true['orientation_z'], msg_object_true['orientation_w']]
-#             if iou_result(pred_object_position, pred_object_orientation, object_position, object_orientation,
-#                           dimension):
-#                 temp_pred_list.append(vehicle)
-#                 temp_true_list.append(vehicle)
-#                 dict_list[]
 
 
 if __name__ == '__main__':
